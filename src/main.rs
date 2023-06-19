@@ -15,13 +15,13 @@ fn main() {
           .filter(|d| d.path().extension().filter(|ext| ext.to_str().unwrap() == "sol").is_some())
           .collect();
       
-  for file in sol_files {
-    let asd = file.path().extension();
-    let s = fs::read_to_string(file.path()).expect("Unable to read file");
-    let count = count_comment_lines(&s);
-    // println!("{:?}", asd);
-    println!("Filename: {:?}\t\tComment Count: {}",file, count)
-  }
+  // for file in sol_files {
+  //   let asd = file.path().extension();
+  //   let s = fs::read_to_string(file.path()).expect("Unable to read file");
+  //   let count = count_comment_lines(&s);
+  //   // println!("{:?}", asd);
+  //   println!("Filename: {:?}\t\tComment Count: {}",file, count)
+  // }
   
     
 }
