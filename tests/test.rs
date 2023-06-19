@@ -15,8 +15,7 @@ static SAMPLES: [&str;8] =
   ];
 
 #[test]
-pub fn print_all_samples() {
-  for s in SAMPLES {
-    println!("{:?}", extract_comments(&s))
-  }
+pub fn count_all_comments() {
+  let tests: Vec<usize> = SAMPLES.iter().map(|x| count_comments(&x).unwrap().1).collect();
+  assert_eq!(tests, vec![0,2,3,4,3,1,1,0])
 }

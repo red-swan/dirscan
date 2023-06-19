@@ -1,13 +1,12 @@
 use std::io;
 use nom::{
-  Err, IResult, Parser,
+  IResult,
   branch::alt,
-  bytes::complete::{is_not, tag, take_until, take_till},
-  character::complete::{char, line_ending, anychar},
-  combinator::{value, eof, map, not, success, all_consuming, peek, opt},
-  error::{ErrorKind, ParseError},
+  bytes::complete::{is_not, tag, take_until},
+  character::complete::anychar,
+  combinator::{value, eof, peek, opt},
   multi::{many0, many_till},
-  sequence::{pair, tuple, preceded, delimited, terminated},
+  sequence::{preceded, delimited, terminated},
 };
 
 
@@ -20,99 +19,51 @@ fn get_input() -> String {
 }
 
 // match single comment 
-fn parse_single_line_comment(s: &str) -> IResult<&str,&str> {
-  preceded( tag("//"),is_not("\n"))(s)
+fn parse_single_line_comment(s: &str) -> IResult<&str,usize> {
+  value(1,
+    preceded( tag("//"),is_not("\n"))
+  )(s)
 }
 
 // mat
-fn parse_multi_line_comments(i: &str) -> IResult<&str, &str> {
-  delimited(tag("/*"),take_until("*/"),tag("*/"))(i)
+fn parse_multi_line_comments(s: &str) -> IResult<&str, usize> {
+  let (a,b) = 
+  delimited(
+    tag("/*"),
+    take_until("*/"),
+    tag("*/")
+  )(s)?;
+
+  Ok((a,b.lines().count()))
 }
 
-fn parse_comment(s: &str) -> IResult<&str, &str> {
+fn parse_comment(s: &str) -> IResult<&str, usize> {
   alt((parse_single_line_comment, parse_multi_line_comments))(s)
 }
 
-fn parse_end_of_file(s:&str) -> IResult<&str,&str> {
-  eof(s)
+fn parse_end_of_file(s:&str) -> IResult<&str,usize> {
+  value(0,eof)(s)
 }
 
-fn skip_not_comment(s: &str) -> IResult<&str, &str> {
+fn skip_not_comment(s: &str) -> IResult<&str, usize> {
   let (s_rest, _) = many_till(anychar, 
               peek(alt((parse_comment, parse_end_of_file)))
   )(s)?;
-  Ok((s_rest,""))
+  Ok((s_rest,0))
 }
 
 
 
-pub fn extract_comments(s: &str) -> IResult<&str,Vec<&str>> {
+pub fn count_comments(s: &str) -> IResult<&str,usize> {
   let (tail,_) = opt(skip_not_comment)(s)?;
 
+  let (rest, nums) = 
     many0( 
       terminated(
         parse_comment,
         opt(skip_not_comment)
       )
-    )(tail)
+    )(tail)?;
+
+    Ok((rest, nums.iter().sum()))
 }
-
-// fn count_multi_line_comments(i: &str) -> IResult<&str, usize> {
-//   map(multi_line_comments, |s| s.lines().count()) (i) 
-// }
-
-// fn _count_comment_lines(s: &str) -> IResult<&str,usize> {
-//   alt((count_single_line_comment, count_multi_line_comments))(s)
-// }
-
-// fn f(s: &str) -> IResult<&str,usize> {
-//   alt(
-//     (_count_comment_lines, 
-//      preceded(first, second)))(s)
-// }
-
-
-// fn _find_comment(s: &str) -> IResult<&str,usize> {
-//   alt(
-//         (_count_comment_lines, preceded(take_until(_count_comment_lines), _count_comment_lines))
-//   )(s)
-//   // alt(
-//   //   (_count_comment_lines, preceded(not(_count_comment_lines), _count_comment_lines))
-//   // )(s)
-//   // preceded(
-//   //   take_until("/"), 
-//   //   _count_comment_lines
-//   // )
-// }
-
-// pub fn asd(s: &str) -> IResult<&str,Vec<&str>> {
-
-//   many0(
-//     alt((comments, 
-//           preceded(
-//           take_until(not(comments)),
-//           comments
-//         )))
-//   )(s)
-
-// }
-
-// // pub fn count_comment_lines(s: &str) -> usize {
-// //   match many0(_find_comment)(s) {
-// //     std::result::Result::Ok(("",v)) => v.iter().sum(),
-// //     _ => usize::MAX
-// //   }
-// // }
-
-
-// fn f(s: &str) -> IResult<&str,&str> {
-//   tag("ab")(s)
-// }
-
-// pub fn aaa(s: &str) -> IResult<&str, Vec<&str>> {
-//   many0(
-//     alt(
-//       (tag("ab"), preceded(take_until("ab"), tag("ab")))
-//     )
-//   )(s)
-// }

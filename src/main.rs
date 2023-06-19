@@ -1,12 +1,17 @@
+use std::env;
 // use std::{env,fs,io, path::PathBuf, path::Path};
 
 use std::fs;
-use::dirscan::*;
+use::dirscan::count_comments;
 use walkdir::WalkDir;
 
 fn main() {
-  //   println!("Please specify target directory:");
-    let dir = "/home/jared/oz/client-code/Compound/comet_wrapper";
+    let args: Vec<String> = env::args().collect();
+    let dir = 
+      match args.first() {
+        None => panic!("Please add directory as argument to the program"),
+        Some(x) => x
+      };
     let sol_files: Vec<_> = 
         WalkDir::new(dir)
           .into_iter()
@@ -15,13 +20,12 @@ fn main() {
           .filter(|d| d.path().extension().filter(|ext| ext.to_str().unwrap() == "sol").is_some())
           .collect();
       
-  // for file in sol_files {
-  //   let asd = file.path().extension();
-  //   let s = fs::read_to_string(file.path()).expect("Unable to read file");
-  //   let count = count_comment_lines(&s);
-  //   // println!("{:?}", asd);
-  //   println!("Filename: {:?}\t\tComment Count: {}",file, count)
-  // }
+  for file in sol_files {
+    let file_text = fs::read_to_string(file.path()).expect("Unable to read file");
+    // Not idiomatic
+    let count = count_comments(&file_text).unwrap().1;
+    println!("Filename: {:?}\t\tComment Count: {}",file, count)
+  }
   
     
 }
